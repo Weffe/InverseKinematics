@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import Base from './Base';
-import { Slider, InputNumber, Switch } from 'antd';
+import { Switch, Row, Col, InputNumber, Button } from 'antd';
 import { Stage, Layer, Group, Rect, Circle, Text, Line } from 'react-konva';
 import Konva from 'konva';
 import { Fabrik } from './Fabrik';
+import Control from './Control';
 
 class DemoPage extends Component {
     constructor(props) {
@@ -15,7 +16,7 @@ class DemoPage extends Component {
         // For Demo purposes
         let numberOfBones = 3;
         for(let i = 0; i < numberOfBones; i++) {
-            fabrik.addBone( {length: 50}, 45);
+            fabrik.addBone( {boneLength: 100}, 45);
         }
 
 
@@ -41,7 +42,9 @@ class DemoPage extends Component {
                 target: {
                     x: fabrik.state.points[fabrik.state.points.length - 1].x,
                     y: fabrik.state.points[fabrik.state.points.length - 1].y * -1
-                }
+                },
+                numberOfBones: numberOfBones,
+                solveOnDragMove: true
             }
         );
 
@@ -52,7 +55,7 @@ class DemoPage extends Component {
         
         this.base = {
             width: 150,
-            height: 75
+            height: 35
         };
         
         // bottom centering
@@ -70,7 +73,8 @@ class DemoPage extends Component {
         target.y *= -1;
 
         // result will be an Object of "points" {Array of Vector3} & "bones" {Array of Objects}
-        let result = this.fabrik.solveIK(target.x, target.y);
+        let fixedBase = false;
+        let result = this.fabrik.solveIK(target.x, target.y, fixedBase);
 
         const newState = this.state;
         for(let i = 1, length = result.points.length; i < length; i++) {
@@ -88,6 +92,8 @@ class DemoPage extends Component {
         newState.target.x = target.x;
         newState.target.y = target.y * -1;
 
+        console.info(newState);
+
         this.setState(newState);
     };
 
@@ -99,6 +105,10 @@ class DemoPage extends Component {
             this.randomColors.push(Konva.Util.getRandomColor());
         }
     }
+
+    resetTarget = () => {
+        this.setState({target: {x: 0, y:0}});
+    };
 
     render() {
         let renderPoints = [], renderBones = [], renderGrids = [];
@@ -144,22 +154,19 @@ class DemoPage extends Component {
             // ignore the first point (base point) since its just (0,0)
             if (i !== 0) {
                 demoControls.push(
-                    <div key={i}>
-                        <h3>Bone {i-1} Degree Values</h3>
-                        <Slider min={-360} max={360} step={0.01} value={this.state["p" + i].angle} />
-                        <InputNumber min={-360} max={360} step={0.01} value={this.state["p" + i].angle}/>
-                    </div>
+                    <Control key={i} index={i} globalAngle={this.state["bone" + i].globalAngle}
+                             localAngle={this.state["bone" + i].localAngle}/>
                 );
             }
         }
 
         return (
             <div>
-                <h1>FABRIK Algorithm - Unconstrained {this.fabrik.state.bones.length} Bones</h1>
+                <h2>Fixed Basepoint - Unconstrained {this.fabrik.state.bones.length} Bones</h2>
                 <Stage width={this.stage.width} height={this.stage.height}>
                     {/* This is just to draw a border around our drawing canvas Stage */}
                     <Layer>
-                        <Rect width={this.stage.width} height={this.stage.height}
+                        <Rect width={this.stage.width} height={this.stage.height} fill="white"
                               stroke="black" strokeWidth={3} dash={[10, 5]} />
                     </Layer>
 
@@ -180,23 +187,43 @@ class DemoPage extends Component {
                             <Circle width={30} fill="rgba(255,0,0,0.5)"
                                     ref="target" draggable={true}
                                     x={this.state.target.x} y={this.state.target.y}
-                                    onDragMove={this.handleTargetDrag}
+                                    onDragMove={ (this.state.solveOnDragMove) ? this.handleTargetDrag : null}
                                     onDragEnd={this.handleTargetDrag}
                                     onMouseOver={() => {document.body.style.cursor = "move"}}
                                     onMouseOut={() => {document.body.style.cursor = "default"}}
                             />
 
                         </Group>
-
                     </Layer>
                 </Stage>
 
-                <div id="controls">
-                    <Switch checkedChildren="Grids On" unCheckedChildren="Grids Off" defaultChecked={true}
-                            onChange={(switchValue) => {this.setState({grids: switchValue})}}/>
+                <Row id="controls">
+                    <h2>Controls</h2>
+                    <Row gutter={6}>
+                        <Col span={2}>
+                            <Switch checkedChildren="Grids On" unCheckedChildren="Grids Off" defaultChecked={true}
+                                onChange={(switchValue) => {this.setState({grids: switchValue})}}/>
+                        </Col>
+
+                        <Col span={2}>
+                            <Switch checkedChildren="Solve While Moving" unCheckedChildren="Solve On Drop" defaultChecked={true}
+                                    onChange={(switchValue) => {this.setState({solveOnDragMove: switchValue})}}/>
+                        </Col>
+
+                        <Col span={2}>
+                            <Row>
+                                <InputNumber formatter={value => `${value.replace(' bones', '')} bones`} defaultValue={3} min={1} />
+                                <Button onClick={() => {}}>Update IK Chain</Button>
+                            </Row>
+                        </Col>
+
+                        <Col span={2}>
+                            <Button onClick={this.resetTarget}>Reset Target</Button>
+                        </Col>
+                    </Row>
 
                     {demoControls}
-                </div>
+                </Row>
             </div>
         );
     }

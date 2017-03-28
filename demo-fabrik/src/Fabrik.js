@@ -64,18 +64,6 @@ class Fabrik {
     };
 
     /**
-     * Clamps the value passed between the range of min to max
-     * @example Fabrik.clamp(-5, 0, 10) // outputs 0
-     * @param {Number} value
-     * @param {Number} min
-     * @param {Number} max
-     * @return {Number}
-     */
-    clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
-    /**
      * Calculates & returns a new object of the new global & local angle of the current bone
      * @param {Vector3} newPosition - the new position of the current point
      * @param {Vector3} currentPoint - the current point without being updated to the new Position
@@ -225,6 +213,28 @@ class Fabrik {
                     break;
                 }
             }
+        }
+
+        // calculate new angles after solving IK
+        let v, u, v_u, globalAngle;
+        for (let i=0, length=this.state.bones; i < length; i++) {
+            const currentBone = this.state.bones[i];
+            v = this.state.points[i+1].clone();
+            u = this.state.points[i].clone();
+            v_u = v.sub(u);
+
+            globalAngle = Math.atan2(v_u.getComponent(1), v_u.getComponent(0));
+            globalAngle = globalAngle * this.RAD2DEG; // convert from radians to degrees
+
+            // set the localAngle differently if its not the base bone
+            if (i >= 1) {
+                const prevBone = this.state.bones[i-1];
+                currentBone.localAngle = globalAngle - prevBone.globalAngle;
+            }
+            else {
+                currentBone.localAngle = globalAngle;
+            }
+            currentBone.globalAngle = globalAngle;
         }
 
         // finally return the solved state of the bones and points
