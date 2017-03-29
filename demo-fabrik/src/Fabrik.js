@@ -217,7 +217,7 @@ class Fabrik {
 
         // calculate new angles after solving IK
         let v, u, v_u, globalAngle;
-        for (let i=0, length=this.state.bones; i < length; i++) {
+        for (let i=0, length=this.state.bones.length; i < length; i++) {
             const currentBone = this.state.bones[i];
             v = this.state.points[i+1].clone();
             u = this.state.points[i].clone();

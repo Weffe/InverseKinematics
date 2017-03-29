@@ -7,6 +7,7 @@ class Base extends Component {
         // we set our drawing reference point to the bottom center of the Stage
         return (
                 <Rect
+                    draggable={true}
                     x={0} y={0}
                     width={this.props.width} height={this.props.height}
                     fill="gray"
