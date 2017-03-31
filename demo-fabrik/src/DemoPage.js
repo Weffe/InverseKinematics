@@ -42,6 +42,7 @@ class DemoPage extends Component {
                     y: fabrik.state.points[fabrik.state.points.length - 1].y * -1
                 },
                 numberOfBones: numberOfBones,
+                showGrids: true,
                 solveOnDragMove: true,
                 showBoneAngles: true
             }
@@ -174,14 +175,12 @@ class DemoPage extends Component {
                 <Rect x={this.state["p" + i].x} y={-this.layer.y * 0.5}
                       width={2} height={this.stage.height}
                       fill={this.randomColors[i]}
-                      visible={this.state.grids}
                       ref={(node) => { this.cacheNodes.push(node); }}
                 />,
                 //x-grids
                 <Rect x={-this.stage.width/2} y={this.state["p" + i].y}
                       width={this.stage.width} height={2}
                       fill={this.randomColors[i]}
-                      visible={this.state.grids}
                       ref={(node) => { this.cacheNodes.push(node); }}
                 />
             );
@@ -223,7 +222,7 @@ class DemoPage extends Component {
                         />
 
                         <Group offsetX={-this.base.width / 2}>
-                            {renderGrids}
+                            {(this.state.showGrids) ? renderGrids : null}
 
                             {renderBones}
 
@@ -254,7 +253,7 @@ class DemoPage extends Component {
                     <Row gutter={8}>
                         <Col span={2}>
                             <Switch checkedChildren="Grids On" unCheckedChildren="Grids Off" defaultChecked={true}
-                                onChange={(switchValue) => {this.setState({grids: switchValue})}}/>
+                                onChange={(switchValue) => {this.setState({showGrids: switchValue})}}/>
                         </Col>
 
                         <Col span={4}>
@@ -271,7 +270,7 @@ class DemoPage extends Component {
 
                         <Col span={4}>
                             <Row>
-                                <InputNumber formatter={value => `${value.replace(' bones', '')} bones`} defaultValue={3} min={1} />
+                                <InputNumber formatter={value => `${value.replace(' bones', '')} bones`} defaultValue={10} min={1} />
                                 <Button onClick={() => {}}>Update IK Chain</Button>
                             </Row>
                         </Col>
