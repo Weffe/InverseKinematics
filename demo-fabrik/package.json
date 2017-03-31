@@ -12,6 +12,7 @@
     "three": "^0.84.0"
   },
   "devDependencies": {
+    "gh-pages": "^0.12.0",
     "react-scripts": "0.9.5"
   },
   "scripts": {

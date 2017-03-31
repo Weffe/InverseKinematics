@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import Base from './Base';
 import { Switch, Row, Col, InputNumber, Button, message } from 'antd';
-import { Stage, Layer, Group, Rect, Circle, Text, Line } from 'react-konva';
+import { Stage, FastLayer, Layer, Group, Rect, Circle, Text, Line } from 'react-konva';
 import Konva from 'konva';
 import { Fabrik } from './Fabrik';
-import Control from './Control';
+import AngleDisplayer from './AngleDisplayer';
 
 class DemoPage extends Component {
     constructor(props) {
@@ -12,32 +11,31 @@ class DemoPage extends Component {
 
         this.fabrik = new Fabrik();
         const fabrik = this.fabrik;
-        
+        this.initialPoints = {};
+        this.initialBones = {};
+
         // For Demo purposes
-        let numberOfBones = 3;
+        let numberOfBones = 10;
         for(let i = 0; i < numberOfBones; i++) {
             fabrik.addBone( {boneLength: 100}, 45);
         }
 
 
-        let initialPoints = {}, initialBones = {};
         for(let i = 0, length = fabrik.state.points.length; i < length; i++) {
             // dynamically set all the States' points with the New Points
-            initialPoints["p" + i] = {
+            this.initialPoints["p" + i] = {
                 x: fabrik.state.points[i].getComponent(0),
                 y: fabrik.state.points[i].getComponent(1) * -1, // this is to convert from cartesianal to gui coordiantes
             };
 
             // make sure we don't go out of bounds for the bones & accidentally create a new bone(N+1) object
             if (i < length - 1) {
-                initialBones["bone" + (i + 1)] = fabrik.state.bones[i];
+                this.initialBones["bone" + (i + 1)] = fabrik.state.bones[i];
             }
         }
 
         // init default values
-        this.state = Object.assign({},
-            initialPoints,
-            initialBones,
+        this.state = Object.assign({}, this.initialBones, this.initialPoints,
             {
                 target: {
                     x: fabrik.state.points[fabrik.state.points.length - 1].x,
@@ -45,6 +43,7 @@ class DemoPage extends Component {
                 },
                 numberOfBones: numberOfBones,
                 solveOnDragMove: true,
+                showBoneAngles: true
             }
         );
 
@@ -52,7 +51,7 @@ class DemoPage extends Component {
             width: window.outerWidth * 0.9,
             height: 700,
         };
-        
+
         this.base = {
             width: 150,
             height: 35
@@ -64,6 +63,8 @@ class DemoPage extends Component {
             x: (this.stage.width/2 - this.base.width/2),
             y: (this.stage.height - this.base.height),
         };
+
+        this.cacheNodes = [];
     }
 
     handleTargetDrag = (event) => {
@@ -115,14 +116,44 @@ class DemoPage extends Component {
         this.setState({target: {x: 0, y:0}});
     };
 
+    updateBoneLengths = (boneLength) => {
+        let result = this.fabrik.updateBonesLength(boneLength);
+        console.info(result);
+
+        const newState = this.state;
+        for(let i = 1, length = result.points.length; i < length; i++) {
+            const point = result.points[i];
+
+            // updating the respective bone's angle
+            // we subtract i-1 because the bones [] starts at 0
+            newState["bone" + i] = result.bones[(i - 1)];
+
+            // we use just i because we don't care about the first point which is (0,0,0)
+            // dynamically updating all the States' points with the New Points
+            newState["p" + i].x = point.getComponent(0);
+            newState["p" + i].y = point.getComponent(1) * -1; // this is to convert from cartesianal to gui coordiantes
+        }
+
+        this.setState(newState);
+    };
+
+    componentDidMount() {
+        // caching nodes to help with performance
+        for(let node of this.cacheNodes) {
+            node.cache();
+        }
+
+        this.refs.target.cache();
+    }
+
     render() {
         let renderPoints = [], renderBones = [], renderGrids = [];
-        let demoControls = []; // for demo purposes
+        let angleDisplayers = []; // for demo purposes
         for(let i=0, length=this.fabrik.state.points.length; i < length; i++) {
             renderPoints.push(
-                <Circle ref={"p" + i}
-                        x={this.state["p" + i].x} y={this.state["p" + i].y}
+                <Circle x={this.state["p" + i].x} y={this.state["p" + i].y}
                         width={15} fill={this.randomColors[i]} key={i}
+                        ref={(node) => { this.cacheNodes.push(node); }}
                 />
             );
 
@@ -138,30 +169,32 @@ class DemoPage extends Component {
                 );
             }
 
-            // y-grids
             renderGrids.push(
+                // y-grids
                 <Rect x={this.state["p" + i].x} y={-this.layer.y * 0.5}
                       width={2} height={this.stage.height}
                       fill={this.randomColors[i]}
                       visible={this.state.grids}
-                />
-            );
-
-            //x-grids
-            renderGrids.push(
+                      ref={(node) => { this.cacheNodes.push(node); }}
+                />,
+                //x-grids
                 <Rect x={-this.stage.width/2} y={this.state["p" + i].y}
                       width={this.stage.width} height={2}
                       fill={this.randomColors[i]}
                       visible={this.state.grids}
+                      ref={(node) => { this.cacheNodes.push(node); }}
                 />
             );
 
             // For demo purposes
             // ignore the first point (base point) since its just (0,0)
             if (i !== 0) {
-                demoControls.push(
-                    <Control key={i} index={i} globalAngle={this.state["bone" + i].globalAngle}
-                             localAngle={this.state["bone" + i].localAngle}/>
+                angleDisplayers.push(
+                    <AngleDisplayer key={i} index={i} showBoneAngles={this.state.showBoneAngles}
+                            globalAngle={this.state["bone" + i].globalAngle}
+                            localAngle={this.state["bone" + i].localAngle}
+
+                    />
                 );
             }
         }
@@ -171,10 +204,12 @@ class DemoPage extends Component {
                 <h2>Fixed Basepoint - Unconstrained {this.fabrik.state.bones.length} Bones</h2>
                 <Stage width={this.stage.width} height={this.stage.height}>
                     {/* This is just to draw a border around our drawing canvas Stage */}
-                    <Layer>
+                    <FastLayer>
                         <Rect width={this.stage.width} height={this.stage.height} fill="white"
-                              stroke="black" strokeWidth={3} dash={[10, 5]} />
-                    </Layer>
+                              stroke="black" strokeWidth={3} dash={[10, 5]}
+                              ref={(node) => { this.cacheNodes.push(node); }}
+                        />
+                    </FastLayer>
 
                     {/* Actual drawn elements */}
                     <Layer x={this.layer.x} y={this.layer.y * 0.5}>
@@ -184,6 +219,7 @@ class DemoPage extends Component {
                             x={0} y={0}
                             width={this.base.width} height={this.base.height}
                             fill="gray"
+                            ref={(node) => { this.cacheNodes.push(node); }}
                         />
 
                         <Group offsetX={-this.base.width / 2}>
@@ -212,9 +248,11 @@ class DemoPage extends Component {
                 </Stage>
 
                 <Row id="controls">
-                    <h2>Controls</h2>
-                    <Row gutter={6}>
-                        <Col span={4}>
+                    <Row>
+                        <h2>Controls</h2>
+                    </Row>
+                    <Row gutter={8}>
+                        <Col span={2}>
                             <Switch checkedChildren="Grids On" unCheckedChildren="Grids Off" defaultChecked={true}
                                 onChange={(switchValue) => {this.setState({grids: switchValue})}}/>
                         </Col>
@@ -224,7 +262,14 @@ class DemoPage extends Component {
                                     onChange={(switchValue) => {this.setState({solveOnDragMove: switchValue})}}/>
                         </Col>
 
-                        <Col span={8}>
+                        <Col span={4}>
+                            <Row>
+                                <h4>Bone Length</h4>
+                                <InputNumber defaultValue={100} min={30} onChange={this.updateBoneLengths}/>
+                            </Row>
+                        </Col>
+
+                        <Col span={4}>
                             <Row>
                                 <InputNumber formatter={value => `${value.replace(' bones', '')} bones`} defaultValue={3} min={1} />
                                 <Button onClick={() => {}}>Update IK Chain</Button>
@@ -232,11 +277,18 @@ class DemoPage extends Component {
                         </Col>
 
                         <Col span={4}>
+                            <Switch checkedChildren="Show Bone Angles" unCheckedChildren="Hide Bone Angles" defaultChecked={true}
+                                    onChange={(switchValue) => {this.setState({showBoneAngles: switchValue})}}/>
+                        </Col>
+
+                        <Col span={4}>
                             <Button onClick={this.resetTarget}>Reset Target</Button>
                         </Col>
                     </Row>
 
-                    {demoControls}
+                    <Row style={{display: (this.state.showBoneAngles) ? 'block' : 'none'}}>
+                        {(this.state.showBoneAngles) ? angleDisplayers : null}
+                    </Row>
                 </Row>
             </div>
         );

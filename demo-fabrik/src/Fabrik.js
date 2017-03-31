@@ -26,6 +26,7 @@ class Fabrik {
         this.DEG2RAD = (Math.PI / 180); // cache for use later on
         this.addBone = this.addBone.bind(this);
         this.solveIK = this.solveIK.bind(this);
+        this.updateBonesLength = this.updateBonesLength.bind(this);
     };
 
     /**
@@ -238,6 +239,29 @@ class Fabrik {
         }
 
         // finally return the solved state of the bones and points
+        return this.state;
+    }
+
+    /**
+     * Updates every bone length to the new specified length
+     * @param {Number} newBonesLength
+     */
+    updateBonesLength(newBonesLength) {
+        const bones = this.state.bones;
+        const points = this.state.points;
+        for(let i = 1, length = points.length; i < length; i++) {
+            const prevPoint = points[i-1];
+            let newX = newBonesLength * Math.cos(bones[i-1].globalAngle * this.DEG2RAD) + prevPoint.getComponent(0),
+                newY = newBonesLength * Math.sin(bones[i-1].globalAngle * this.DEG2RAD) + prevPoint.getComponent(1);
+
+            // updating the bone length
+            bones[i-1].boneLength = newBonesLength;
+
+            // updating the point
+            points[i].setComponent(0, newX);
+            points[i].setComponent(1, newY);
+        }
+
         return this.state;
     }
 }
