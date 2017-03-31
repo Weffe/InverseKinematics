@@ -171,6 +171,7 @@ class DemoPage extends Component {
 
     handleBoneChainChange = (value) => {
         if (value < this.state.bonesAmount) {
+            this.randomColors.pop();
             let result = this.fabrik.removeBone();
             this.updateChain(result);
         }

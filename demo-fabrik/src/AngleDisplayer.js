@@ -19,7 +19,8 @@ class AngleDisplayer extends Component {
         }
 
         this.h4_style = {
-            paddingLeft: '15px',
+            marginBottom: '-5px',
+            paddingLeft: '42px',
             fontStyle: 'italic'
         };
 
@@ -49,21 +50,21 @@ class AngleDisplayer extends Component {
                 <Row>
                     <h3>Bone {this.props.index} Degree Values</h3>
                 </Row>
-                <Row gutter={8}>
+                <Row>
                     <h4 style={this.h4_style}>Local Angle</h4>
-                    <Col span={22}>
+                    <Col span={20} offset={1} >
                         <Slider min={-360} max={360} step={0.01} value={this.state.localAngle} marks={this.marks}/>
                     </Col>
-                    <Col span={2}>
+                    <Col span={2} offset={1}>
                         <InputNumber min={-360} max={360} step={0.01} value={this.state.localAngle} formatter={this.formatValue}/>
                     </Col>
                 </Row>
-                <Row gutter={8}>
+                <Row>
                     <h4 style={this.h4_style}>Global Angle</h4>
-                    <Col span={22}>
+                    <Col span={20} offset={1}>
                         <Slider min={-360} max={360} step={0.01} value={this.state.globalAngle} marks={this.marks}/>
                     </Col>
-                    <Col span={2}>
+                    <Col span={2} offset={1}>
                         <InputNumber min={-360} max={360} step={0.01} value={this.state.globalAngle} formatter={this.formatValue}/>
                     </Col>
                 </Row>
