@@ -62,7 +62,22 @@ class Fabrik {
             this.state.bones.push(Object.assign({}, bone, boneAngleInfo)); // append our new bone object w/ angle
             this.totalArmLength += bone.boneLength; // add to our total arm length
         }
+
+        return this.state;
     };
+
+    /**
+     * Removes a bone from the end of the chain
+     * @return {{points: Array, bones: Array}|*}
+     */
+    removeBone() {
+        if (this.state.bones.length >= 1) {
+            this.state.bones.pop();
+            this.state.points.pop();
+
+            return this.state;
+        }
+    }
 
     /**
      * Calculates & returns a new object of the new global & local angle of the current bone

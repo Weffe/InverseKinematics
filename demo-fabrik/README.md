@@ -7,8 +7,8 @@ shapes, and [ant-design](https://ant.design/docs/react/introduce) for the ui com
 
 Interactivity includes:
 
-* Being able to manipulate Sliders
-* Change individual length of different bones
+* Toggling visibility of grids
+* Change the length of the bones
 * Changing # of Bones in the Chain
 
 
