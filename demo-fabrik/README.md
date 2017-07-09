@@ -1,6 +1,6 @@
 # Inverse Kinematics - Fabrik Algorithm
 
-## Demo: (https://weffe.github.io/InverseKinematics)[https://weffe.github.io/InverseKinematics]
+#### Demo: https://weffe.github.io/InverseKinematics
 
 Hello! Welcome to my page. I've implemented the fabrik algorithm in javascript as seen from this paper: http://www.andreasaristidou.com/publications/CUEDF-INFENG,%20TR-632.pdf
 
