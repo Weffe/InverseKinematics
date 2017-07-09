@@ -1,5 +1,7 @@
 # Inverse Kinematics - Fabrik Algorithm
 
+## Demo: (https://weffe.github.io/InverseKinematics)[https://weffe.github.io/InverseKinematics]
+
 Hello! Welcome to my page. I've implemented the fabrik algorithm in javascript as seen from this paper: http://www.andreasaristidou.com/publications/CUEDF-INFENG,%20TR-632.pdf
 
 I've incorporated the fabrik algorithm into a UI using [ReactJS](https://facebook.github.io/react/), [react-konva](https://github.com/lavrton/react-konva) for the canvas
